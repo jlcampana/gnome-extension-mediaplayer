@@ -21,7 +21,25 @@ by sanjai-shaarugesh (v6.6), GPL-3.0. Until October 2026 it lived inside
   `Stopped` for a moment between songs).
 - Uses the shell's own font, same as the rest of the top bar.
 
+Earlier changes in the fork:
+
+- Its own id (`media-controller@jlcampana.github.io`, schema
+  `org.gnome.shell.extensions.media-controller`, gettext domain
+  `media-controller`), so an update of the original can't overwrite it.
+- Themes live in `~/.local/share/media-controller/themes/`. The original kept
+  them inside `gnome-shell/extensions/`, and GNOME Shell tried to load that
+  folder as an extension at every login ("Missing metadata.json").
+- Orphan timers: when GNOME Shell destroyed the progress bar from C, its 33 ms
+  animation timer kept running against a dead actor. That flooded the journal
+  and made Activities stutter. It is now stopped on `destroy` too.
+
 ## Installation
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/jlcampana/mediaplayer-gnome-extension/main/install.sh | bash
+```
+
+Or from a clone: `./install.sh`. By hand:
 
 ```bash
 UUID=media-controller@jlcampana.github.io
