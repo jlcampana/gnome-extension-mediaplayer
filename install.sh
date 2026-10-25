@@ -18,6 +18,8 @@ SCHEMA="org.gnome.shell.extensions.media-controller"
 UUID_ORIGINAL="advanced-media-controller@sanjai.com"
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
 DEST="$DATA/gnome-shell/extensions/$UUID"
+# Global: the EXIT trap runs after main() has returned
+TMP=""
 
 info() { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m==>\033[0m %s\n' "$*" >&2; }
@@ -26,7 +28,7 @@ fail() { printf '\033[1;31m==>\033[0m %s\n' "$*" >&2; exit 1; }
 main() {
     command -v glib-compile-schemas >/dev/null || fail "glib-compile-schemas not found (package glib2 / libglib2.0-bin)"
 
-    local src tmp=""
+    local src
     local here
     here="$(cd "$(dirname "${BASH_SOURCE[0]:-.}")" 2>/dev/null && pwd || true)"
     if [[ -n $here && -f $here/metadata.json ]] && grep -q "\"$UUID\"" "$here/metadata.json"; then
@@ -34,12 +36,12 @@ main() {
         info "Installing from $src"
     else
         command -v curl >/dev/null || fail "curl not found"
-        tmp="$(mktemp -d)"
-        trap 'rm -rf "$tmp"' EXIT
+        TMP="$(mktemp -d)"
+        trap 'rm -rf "$TMP"' EXIT
         info "Downloading $REPO ($BRANCH)"
         curl -fsSL "https://codeload.github.com/$REPO/tar.gz/refs/heads/$BRANCH" |
-            tar -xz -C "$tmp" --strip-components=1
-        src="$tmp"
+            tar -xz -C "$TMP" --strip-components=1
+        src="$TMP"
     fi
 
     rm -rf "$DEST"
