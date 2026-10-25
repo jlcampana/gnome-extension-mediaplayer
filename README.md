@@ -36,7 +36,7 @@ Earlier changes in the fork:
 ## Installation
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/jlcampana/mediaplayer-gnome-extension/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/jlcampana/gnome-extension-mediaplayer/main/install.sh | bash
 ```
 
 Or from a clone: `./install.sh`. By hand:

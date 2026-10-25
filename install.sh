@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Installs Media Controller into your user account:
 #
-#   curl -fsSL https://raw.githubusercontent.com/jlcampana/mediaplayer-gnome-extension/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/jlcampana/gnome-extension-mediaplayer/main/install.sh | bash
 #
 # Run from a clone, it installs that copy; otherwise it downloads the main branch.
 # Disables the original Advanced Media Controller if it is active (two media
@@ -11,7 +11,7 @@
 # (needed for «curl | bash»).
 set -euo pipefail
 
-REPO="${MEDIA_REPO:-jlcampana/mediaplayer-gnome-extension}"
+REPO="${MEDIA_REPO:-jlcampana/gnome-extension-mediaplayer}"
 BRANCH="${MEDIA_BRANCH:-main}"
 UUID="media-controller@jlcampana.github.io"
 SCHEMA="org.gnome.shell.extensions.media-controller"
