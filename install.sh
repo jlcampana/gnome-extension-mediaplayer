@@ -29,8 +29,11 @@ main() {
     command -v glib-compile-schemas >/dev/null || fail "glib-compile-schemas not found (package glib2 / libglib2.0-bin)"
 
     local src
-    local here
-    here="$(cd "$(dirname "${BASH_SOURCE[0]:-.}")" 2>/dev/null && pwd || true)"
+    # Piped through curl there is no script file: always download then
+    local here=""
+    if [[ -f ${BASH_SOURCE[0]:-} ]]; then
+        here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    fi
     if [[ -n $here && -f $here/metadata.json ]] && grep -q "\"$UUID\"" "$here/metadata.json"; then
         src="$here"
         info "Installing from $src"
