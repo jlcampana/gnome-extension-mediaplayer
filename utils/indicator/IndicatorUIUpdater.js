@@ -1,5 +1,6 @@
 import GLib from "gi://GLib";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
+import { gettext as _ } from "resource:///org/gnome/shell/extensions/extension.js";
 
 const BROWSER_MPRIS_PREFIXES = [
   "firefox",
@@ -274,7 +275,7 @@ export class IndicatorUIUpdater {
       const separator =
         this._indicator._settings.get_string("separator-text");
 
-      let text = info.title || "Unknown";
+      let text = info.title || _("Unknown");
       if (showArtist && info.artists && info.artists.length > 0)
         text += separator + info.artists.join(", ");
 

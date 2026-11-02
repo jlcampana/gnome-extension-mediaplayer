@@ -9,6 +9,7 @@ import {
   clearIconCache,
   applyMonochromeToIcon,
 } from "../icon/IconResolver.js";
+import { gettext as _ } from "resource:///org/gnome/shell/extensions/extension.js";
 import { playerConstant } from "./playerConstant.js";
 
 const _BROWSER_MPRIS_PREFIXES = [
@@ -170,7 +171,7 @@ export const PlayerTabs = GObject.registerClass(
         reactive: true,
         can_focus: true,
         track_hover: true,
-        accessible_name: "Pin media player popup",
+        accessible_name: _("Pin media player popup"),
       });
       this._pinButton.set_child(this._pinIcon);
       this._pinButton.set_pivot_point(0.5, 0.5);
@@ -524,7 +525,7 @@ export const PlayerTabs = GObject.registerClass(
         can_focus: true,
         track_hover: true,
         x_expand: false,
-        accessible_name: `Switch to ${name}`,
+        accessible_name: _("Switch to %s").format(name),
       });
       button.set_pivot_point(0.5, 0.5);
 

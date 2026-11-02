@@ -6,6 +6,7 @@ import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import Clutter from "gi://Clutter";
 import Cairo from "cairo";
+import { gettext as _ } from "resource:///org/gnome/shell/extensions/extension.js";
 import { playerConstant } from "../../utils/ui/playerConstant.js";
 
 const SCROLL_EASING_MS = 240; // snappy but smooth
@@ -743,7 +744,7 @@ export const LyricsWidget = GObject.registerClass(
       layout.set_font_description(this._font(fontSize, true));
       layout.set_width((width - paddingX * 2) * Pango.SCALE);
       layout.set_alignment(Pango.Alignment.CENTER);
-      layout.set_text("No lyrics found", -1);
+      layout.set_text(_("No lyrics found"), -1);
 
       const [, logical] = layout.get_extents();
       const textW = logical.width / Pango.SCALE;

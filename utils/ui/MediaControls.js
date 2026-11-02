@@ -187,7 +187,7 @@ export const MediaControls = GObject.registerClass(
 
     _refreshLabels() {
       const info = this._currentTrackInfo;
-      this._updateTitleLabel(info.title || "Unknown", info.status);
+      this._updateTitleLabel(info.title || _("Unknown"), info.status);
       if (info.artists?.length)
         this._updateArtistLabel(info.artists.join(", "), info.status);
     }
@@ -826,7 +826,7 @@ export const MediaControls = GObject.registerClass(
         this._upgradeCover(info);
       this._playerArtCache.set(playerName, info.artUrl);
 
-      this._updateTitleLabel(info.title || "Unknown", info.status);
+      this._updateTitleLabel(info.title || _("Unknown"), info.status);
 
       if (info.artists?.length) {
         this._updateArtistLabel(info.artists.join(", "), info.status);

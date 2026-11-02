@@ -153,7 +153,7 @@ export const ProgressSlider = GObject.registerClass(
       });
 
       this._positionSlider = new Slider.Slider(0);
-      this._positionSlider.accessible_name = "Position";
+      this._positionSlider.accessible_name = _("Position");
       this._positionSlider.x_expand = true;
 
       this._sliderChangedId = this._positionSlider.connect(

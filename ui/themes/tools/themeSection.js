@@ -241,7 +241,7 @@ export function buildThemeGroup(
 
   const buildRow = (t, isActive) => {
     const row = new Adw.ActionRow({
-      title: t.label,
+      title: _(t.label),
       subtitle: subtitleFor(t),
       activatable: !isActive,
       use_markup: false,

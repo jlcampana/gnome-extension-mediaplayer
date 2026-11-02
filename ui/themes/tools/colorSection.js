@@ -79,7 +79,7 @@ export function buildColorGroup(page, settings, previewArea, getCurrentColor, ge
     });
 
     for (const cp of COLOR_PRESETS) {
-        const btn = new Gtk.Button({ tooltip_text: cp.label, css_classes: ["flat"] });
+        const btn = new Gtk.Button({ tooltip_text: _(cp.label), css_classes: ["flat"] });
         const swatch = new Gtk.DrawingArea({ content_width: 28, content_height: 28 });
         swatch.set_draw_func((_w, cr) => {
             const rgba = new Gdk.RGBA();
