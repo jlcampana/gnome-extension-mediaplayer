@@ -858,8 +858,8 @@ export const AlbumArt = GObject.registerClass(
         );
         this._setCoverImage(`file://${cachePath}`);
       } catch {
-        // Temp file already gone; use it directly and hope for the best
-        this._setCoverImage(fallbackUri);
+        // Temp file already gone — don't propagate a dead URI
+        this.setDefaultCover();
       }
     }
 

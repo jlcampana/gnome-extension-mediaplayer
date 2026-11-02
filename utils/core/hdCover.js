@@ -131,7 +131,8 @@ function scoreResult(r, v, album) {
   return score;
 }
 
-/** @returns {boolean} true when the local cover is too small to look sharp */
+/** @returns {boolean} true when the local cover is too small to look sharp,
+ *  or when the file doesn't exist (deleted temp file → needs HD upgrade) */
 export function isSmallCover(uri) {
   try {
     const path = uri.startsWith("file://")
@@ -140,7 +141,7 @@ export function isSmallCover(uri) {
     const [format, w, h] = GdkPixbuf.Pixbuf.get_file_info(path);
     return !!format && Math.max(w, h) < SMALL_COVER_PX;
   } catch {
-    return false;
+    return true;
   }
 }
 
