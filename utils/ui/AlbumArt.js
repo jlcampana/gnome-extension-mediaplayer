@@ -817,9 +817,49 @@ export const AlbumArt = GObject.registerClass(
       }
 
       if (url.startsWith("file://") || url.startsWith("/")) {
-        this._setCoverImage(url.startsWith("file://") ? url : `file://${url}`);
+        const fileUri = url.startsWith("file://") ? url : `file://${url}`;
+        const path = url.startsWith("file://") ? url.slice(7) : url;
+        // Temp files (e.g. Chromium's /tmp art) get deleted; copy to cache first
+        if (path.startsWith("/tmp/")) {
+          this._cacheLocalCover(path, fileUri);
+        } else {
+          this._setCoverImage(fileUri);
+        }
       } else {
         this._downloadCover(url);
+      }
+    }
+
+    _cacheLocalCover(srcPath, fallbackUri) {
+      const hash = GLib.compute_checksum_for_string(
+        GLib.ChecksumType.MD5,
+        srcPath,
+        -1,
+      );
+      const cacheDir = GLib.build_filenamev([
+        GLib.get_user_cache_dir(),
+        "mpris-covers",
+      ]);
+      GLib.mkdir_with_parents(cacheDir, 0o755);
+      const cachePath = GLib.build_filenamev([cacheDir, hash]);
+
+      const cacheFile = Gio.File.new_for_path(cachePath);
+      if (isCached(cacheFile)) {
+        this._setCoverImage(`file://${cachePath}`);
+        return;
+      }
+
+      try {
+        Gio.File.new_for_path(srcPath).copy(
+          cacheFile,
+          Gio.FileCopyFlags.OVERWRITE,
+          null,
+          null,
+        );
+        this._setCoverImage(`file://${cachePath}`);
+      } catch {
+        // Temp file already gone; use it directly and hope for the best
+        this._setCoverImage(fallbackUri);
       }
     }
 
