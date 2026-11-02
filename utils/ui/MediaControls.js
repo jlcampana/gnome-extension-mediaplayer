@@ -31,6 +31,14 @@ const BACKDROP_RATIO = 2.4;
 const COVER_MAX_ASPECT = 0.9;
 const ART_MIN_ROOM = 96;
 const SCRIM_START = 0.25;
+// White text needs a dark scrim: light covers are darkened down to this luma
+const SCRIM_MAX_LUMA = 0.3;
+
+const luma = ([r, g, b]) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+const capLuma = (rgb, max) => {
+  const l = luma(rgb);
+  return l > max ? rgb.map((v) => (v * max) / l) : rgb;
+};
 
 const LYRICS_FLOAT_HEIGHT = 132;
 const LYRICS_FLOAT_GAP = 10;
@@ -295,7 +303,9 @@ export const MediaControls = GObject.registerClass(
           style += ` border-radius: 18px;${backdropCss(w)}`;
         }
 
-        contentStyle += `${radiusStyle} color: #fff;`;
+        contentStyle +=
+          `${radiusStyle} color: #fff;` +
+          " text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);";
       }
 
       this.style = style;
@@ -384,9 +394,15 @@ export const MediaControls = GObject.registerClass(
         const aspect = cover.get_height() / cover.get_width();
         this._coverAspect = Math.min(aspect, COVER_MAX_ASPECT);
 
-        const base = this._tone(cover, 10, 16).map((v) => v * 0.55);
+        const base = capLuma(
+          this._tone(cover, 10, 16).map((v) => v * 0.55),
+          SCRIM_MAX_LUMA,
+        );
         const end = base.map((v) => v * 0.6);
-        const top = this._tone(cover, 0, 6).map((v) => v * 0.7);
+        const top = capLuma(
+          this._tone(cover, 0, 6).map((v) => v * 0.7),
+          SCRIM_MAX_LUMA,
+        );
         const css = (rgb) =>
           `rgb(${rgb.map((v) => Math.round(v * 255)).join(",")})`;
         this._backdropColor = css(end);
@@ -403,7 +419,7 @@ export const MediaControls = GObject.registerClass(
           "backdrop",
         ]);
         GLib.mkdir_with_parents(dir, 0o755);
-        const out = GLib.build_filenamev([dir, `${name}-v4.png`]);
+        const out = GLib.build_filenamev([dir, `${name}-v5.png`]);
         if (GLib.file_test(out, GLib.FileTest.EXISTS)) return `file://${out}`;
 
         const width = BACKDROP_WIDTH;

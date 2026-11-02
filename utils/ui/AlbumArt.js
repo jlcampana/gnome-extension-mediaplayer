@@ -1,6 +1,7 @@
 import St from "gi://St";
 import Gio from "gi://Gio";
 import GLib from "gi://GLib";
+import Soup from "gi://Soup";
 import Clutter from "gi://Clutter";
 import GObject from "gi://GObject";
 import Graphene from "gi://Graphene";
@@ -889,21 +890,25 @@ export const AlbumArt = GObject.registerClass(
 
       this.setDefaultCover();
 
-      Gio.File.new_for_uri(url).copy_async(
-        cacheFile,
-        Gio.FileCopyFlags.OVERWRITE,
+      this._coverSession ??= new Soup.Session();
+      const msg = Soup.Message.new("GET", url);
+      this._coverSession.send_and_read_async(
+        msg,
         GLib.PRIORITY_LOW,
         cancellable,
-        null,
-        (src, res) => {
+        (sess, res) => {
+          if (cancellable.is_cancelled()) return;
           try {
-            src.copy_finish(res);
+            const bytes = sess.send_and_read_finish(res);
+            if (msg.status_code !== 200)
+              throw new Error(`HTTP ${msg.status_code}`);
+            const data = bytes.get_data();
+            if (!data?.length) throw new Error("empty response");
+            GLib.file_set_contents(cachePath, data);
+            this._setCoverImage(`file://${cachePath}`);
           } catch {
-            if (!cancellable.is_cancelled() && fallbacks.length)
-              this._fetchCover(fallbacks, cancellable);
-            return;
+            if (fallbacks.length) this._fetchCover(fallbacks, cancellable);
           }
-          this._setCoverImage(`file://${cachePath}`);
         },
       );
     }
@@ -1007,6 +1012,9 @@ export const AlbumArt = GObject.registerClass(
     destroy() {
       this._coverCancellable?.cancel();
       this._coverCancellable = null;
+
+      this._coverSession?.abort();
+      this._coverSession = null;
 
       this.stopRotation();
 
