@@ -43,6 +43,34 @@ function isCached(file) {
   return info.get_size() > 0;
 }
 
+/** @returns {Promise<number|null>} PID owning the player's D-Bus name */
+function playerPid(busName, cancellable) {
+  return new Promise((resolve) => {
+    if (!busName) {
+      resolve(null);
+      return;
+    }
+    Gio.DBus.session.call(
+      "org.freedesktop.DBus",
+      "/org/freedesktop/DBus",
+      "org.freedesktop.DBus",
+      "GetConnectionUnixProcessID",
+      new GLib.Variant("(s)", [busName]),
+      new GLib.VariantType("(u)"),
+      Gio.DBusCallFlags.NONE,
+      -1,
+      cancellable,
+      (bus, res) => {
+        try {
+          resolve(bus.call_finish(res).deepUnpack()[0]);
+        } catch {
+          resolve(null);
+        }
+      },
+    );
+  });
+}
+
 const parseRecord = (raw) => {
   try {
     return JSON.parse(raw);
@@ -819,9 +847,10 @@ export const AlbumArt = GObject.registerClass(
       if (url.startsWith("file://") || url.startsWith("/")) {
         const fileUri = url.startsWith("file://") ? url : `file://${url}`;
         const path = url.startsWith("file://") ? url.slice(7) : url;
-        // Temp files (e.g. Chromium's /tmp art) get deleted; copy to cache first
+        // Temp art (e.g. Chromium's) is short-lived and, for sandboxed players,
+        // not even visible from here; copy it to the cache first
         if (path.startsWith("/tmp/")) {
-          this._cacheLocalCover(path, fileUri);
+          this._cacheLocalCover(path, url);
         } else {
           this._setCoverImage(fileUri);
         }
@@ -830,7 +859,7 @@ export const AlbumArt = GObject.registerClass(
       }
     }
 
-    _cacheLocalCover(srcPath, fallbackUri) {
+    async _cacheLocalCover(srcPath, url) {
       const hash = GLib.compute_checksum_for_string(
         GLib.ChecksumType.MD5,
         srcPath,
@@ -849,18 +878,33 @@ export const AlbumArt = GObject.registerClass(
         return;
       }
 
-      try {
-        Gio.File.new_for_path(srcPath).copy(
-          cacheFile,
-          Gio.FileCopyFlags.OVERWRITE,
-          null,
-          null,
-        );
-        this._setCoverImage(`file://${cachePath}`);
-      } catch {
-        // Temp file already gone — don't propagate a dead URI
-        this.setDefaultCover();
+      this._coverCancellable?.cancel();
+      const cancellable = new Gio.Cancellable();
+      this._coverCancellable = cancellable;
+
+      const pid = await playerPid(this._playerName, cancellable);
+      // Destroyed, or another cover was requested while waiting for D-Bus
+      if (cancellable.is_cancelled() || this._currentArtUrl !== url) return;
+
+      // Snap gives the player a private /tmp: the path in artUrl only exists
+      // inside its mount namespace, reachable through /proc/<pid>/root
+      const sources = pid ? [`/proc/${pid}/root${srcPath}`, srcPath] : [srcPath];
+      for (const src of sources) {
+        try {
+          Gio.File.new_for_path(src).copy(
+            cacheFile,
+            Gio.FileCopyFlags.OVERWRITE,
+            null,
+            null,
+          );
+          this._setCoverImage(`file://${cachePath}`);
+          return;
+        } catch {
+          // Not at this location; try the next one
+        }
       }
+      // Temp file already gone — don't propagate a dead URI
+      this.setDefaultCover();
     }
 
     _setCoverImage(imageUrl) {
